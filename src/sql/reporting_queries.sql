@@ -45,3 +45,32 @@ left join class_registrations on class_sections.class_section_id = class_registr
 left join grades on class_registrations.grade_id = grades.grade_id
 group by class_sections.class_section_id
 order by terms.term_id;
+
+-- List all the classes being taught by an instructor (use instructor_id=1) 
+select instructors.first_name, instructors.last_name, academic_titles.title, 
+classes.code, classes.name as class_name, terms.name as term
+from instructors
+left join academic_titles on instructors.academic_title_id = academic_titles.academic_title_id
+left join class_sections on class_sections.instructor_id = instructors.instructor_id
+left join classes on classes.class_id = class_sections.class_id
+left join terms on terms.term_id = class_sections.term_id
+where instructors.instructor_id = 1;
+
+-- List all classes with terms & instructor 
+select classes.code, classes.name, terms.name as term, instructors.first_name, instructors.last_name
+from instructors
+left join class_sections on class_sections.instructor_id = instructors.instructor_id
+left join classes on classes.class_id = class_sections.class_id
+left join terms on terms.term_id = class_sections.term_id
+order by class_sections.class_section_id;
+
+-- Calculate the remaining space left in a class 
+select classes.code, classes.name, terms.name as term,
+count(class_registrations.class_section_id) as enrolled_students, 
+(classes.maximum_students - count(class_registrations.class_section_id)) as space_remaining
+from class_sections
+left join classes on classes.class_id = class_sections.class_id
+left join terms on terms.term_id = class_sections.term_id
+left join class_registrations on class_sections.class_section_id = class_registrations.class_section_id
+group by class_sections.class_section_id
+HAVING count(class_registrations.class_section_id) > 0;
